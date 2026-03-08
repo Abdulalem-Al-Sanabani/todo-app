@@ -6,6 +6,22 @@
   --primary: #0b74de;
   --danger: #c0392b;
   --border: #d9e2ec;
+  --item-bg: #fbfcfe;
+  --input-bg: #ffffff;
+  --shadow: 0 8px 24px rgba(15, 23, 42, 0.08);
+}
+
+:root[data-theme="dark"] {
+  --bg: #101820;
+  --card: #1b2530;
+  --text: #e3ecf5;
+  --muted: #9eb0c2;
+  --primary: #4c9df5;
+  --danger: #de6a5f;
+  --border: #314255;
+  --item-bg: #202c38;
+  --input-bg: #16202a;
+  --shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
 }
 
 * {
@@ -17,6 +33,7 @@ body {
   font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
   background: var(--bg);
   color: var(--text);
+  transition: background-color 0.2s ease, color 0.2s ease;
 }
 
 .app {
@@ -26,11 +43,38 @@ body {
   background: var(--card);
   border: 1px solid var(--border);
   border-radius: 12px;
-  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.08);
+  box-shadow: var(--shadow);
+  transition: background-color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.app-topbar {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.theme-toggle {
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--item-bg);
+  color: var(--text);
+  font-size: 13px;
+  font-weight: 600;
+  padding: 6px 12px;
+  cursor: pointer;
+  transition: background-color 0.2s ease, border-color 0.2s ease;
+}
+
+.theme-toggle:hover {
+  border-color: var(--primary);
+}
+
+.theme-toggle:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
 }
 
 h1 {
-  margin: 0 0 16px;
+  margin: 8px 0 16px;
   text-align: center;
 }
 
@@ -45,6 +89,12 @@ h1 {
   border: 1px solid var(--border);
   border-radius: 8px;
   font-size: 15px;
+  background: var(--input-bg);
+  color: var(--text);
+}
+
+#todo-input::placeholder {
+  color: var(--muted);
 }
 
 .todo-form button {
@@ -73,7 +123,7 @@ h1 {
   border: 1px solid var(--border);
   border-radius: 8px;
   padding: 10px 12px;
-  background: #fbfcfe;
+  background: var(--item-bg);
 }
 
 .todo-text {

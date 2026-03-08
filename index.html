@@ -4,10 +4,30 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Simple Todo App</title>
+  <script>
+    (function () {
+      const key = "todo-theme";
+      const saved = localStorage.getItem(key);
+      const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+      const theme = saved === "dark" || saved === "light" ? saved : (prefersDark ? "dark" : "light");
+      document.documentElement.setAttribute("data-theme", theme);
+    })();
+  </script>
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
   <main class="app">
+    <div class="app-topbar">
+      <button
+        id="theme-toggle"
+        class="theme-toggle"
+        type="button"
+        aria-label="Switch theme"
+        aria-pressed="false"
+      >
+        Dark Theme
+      </button>
+    </div>
     <h1>Todo App</h1>
 
     <form id="todo-form" class="todo-form">
