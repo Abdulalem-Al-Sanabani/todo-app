@@ -8,6 +8,7 @@ const THEME_KEY = "todo-theme";
 const LIGHT_THEME = "light";
 const DARK_THEME = "dark";
 
+// Each todo: { text: string, completed: boolean }
 let todos = [];
 
 function getPreferredTheme() {
@@ -25,9 +26,23 @@ function applyTheme(theme) {
   const isDark = nextTheme === DARK_THEME;
 
   root.setAttribute("data-theme", nextTheme);
-  themeToggle.textContent = isDark ? "Light Theme" : "Dark Theme";
+
+  const iconEl = themeToggle.querySelector(".theme-toggle-icon");
+  const labelEl = themeToggle.querySelector(".theme-toggle-label");
+
+  if (iconEl) iconEl.textContent = isDark ? "☀️" : "🌙";
+  if (labelEl) labelEl.textContent = isDark ? "Light" : "Dark";
+
   themeToggle.setAttribute("aria-label", isDark ? "Switch to light theme" : "Switch to dark theme");
   themeToggle.setAttribute("aria-pressed", String(isDark));
+}
+
+function removeItemAnimated(item, index) {
+  item.classList.add("removing");
+  item.addEventListener("animationend", () => {
+    todos.splice(index, 1);
+    renderTodos();
+  }, { once: true });
 }
 
 function renderTodos() {
@@ -36,28 +51,40 @@ function renderTodos() {
   if (todos.length === 0) {
     const empty = document.createElement("li");
     empty.className = "empty-state";
-    empty.textContent = "No todos yet. Add one above.";
+    empty.innerHTML = '<span class="empty-state-icon" aria-hidden="true">📋</span><span>No tasks yet — add one above!</span>';
     list.appendChild(empty);
     return;
   }
 
   todos.forEach((todo, index) => {
     const item = document.createElement("li");
-    item.className = "todo-item";
+    item.className = "todo-item" + (todo.completed ? " completed" : "");
+
+    // Complete toggle button
+    const completeBtn = document.createElement("button");
+    completeBtn.className = "complete-btn";
+    completeBtn.type = "button";
+    completeBtn.setAttribute("aria-label", todo.completed ? "Mark as incomplete" : "Mark as complete");
+    completeBtn.textContent = todo.completed ? "✓" : "";
+    completeBtn.addEventListener("click", () => {
+      todos[index].completed = !todos[index].completed;
+      renderTodos();
+    });
 
     const text = document.createElement("span");
     text.className = "todo-text";
-    text.textContent = todo;
+    text.textContent = todo.text;
 
     const delButton = document.createElement("button");
     delButton.className = "delete-btn";
     delButton.type = "button";
     delButton.textContent = "Delete";
+    delButton.setAttribute("aria-label", `Delete task: ${todo.text}`);
     delButton.addEventListener("click", () => {
-      todos.splice(index, 1);
-      renderTodos();
+      removeItemAnimated(item, index);
     });
 
+    item.appendChild(completeBtn);
     item.appendChild(text);
     item.appendChild(delButton);
     list.appendChild(item);
@@ -72,7 +99,7 @@ form.addEventListener("submit", (event) => {
     return;
   }
 
-  todos.push(value);
+  todos.push({ text: value, completed: false });
   input.value = "";
   input.focus();
   renderTodos();
@@ -87,3 +114,4 @@ themeToggle.addEventListener("click", () => {
 
 applyTheme(getPreferredTheme());
 renderTodos();
+

@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Simple Todo App</title>
+  <title>Todo App</title>
   <script>
     (function () {
       const key = "todo-theme";
@@ -13,6 +13,9 @@
       document.documentElement.setAttribute("data-theme", theme);
     })();
   </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
@@ -22,26 +25,35 @@
         id="theme-toggle"
         class="theme-toggle"
         type="button"
-        aria-label="Switch theme"
+        aria-label="Switch to dark theme"
         aria-pressed="false"
       >
-        Dark Theme
+        <span class="theme-toggle-icon" aria-hidden="true">🌙</span>
+        <span class="theme-toggle-label">Dark</span>
       </button>
     </div>
-    <h1>Todo App</h1>
+
+    <header class="app-header">
+      <div class="app-icon" aria-hidden="true">✅</div>
+      <h1>My Tasks</h1>
+      <p class="app-subtitle">Stay organised, get things done</p>
+    </header>
 
     <form id="todo-form" class="todo-form">
       <input
         id="todo-input"
         type="text"
-        placeholder="Add a todo..."
+        placeholder="What needs to be done?"
         autocomplete="off"
         required
       />
-      <button type="submit">Add</button>
+      <button type="submit" aria-label="Add task">
+        <span aria-hidden="true">+</span>
+        Add
+      </button>
     </form>
 
-    <ul id="todo-list" class="todo-list"></ul>
+    <ul id="todo-list" class="todo-list" aria-label="Task list"></ul>
   </main>
 
   <script src="script.js"></script>
