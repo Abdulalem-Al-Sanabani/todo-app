@@ -1,141 +1,144 @@
-const form = document.getElementById("todo-form");
-const input = document.getElementById("todo-input");
-const list = document.getElementById("todo-list");
-const stats = document.getElementById("todo-stats");
-const themeToggle = document.getElementById("theme-toggle");
-const themeIcon = themeToggle.querySelector(".theme-icon");
-const themeLabel = themeToggle.querySelector(".theme-label");
-const root = document.documentElement;
+// DOM elements
+const taskForm = document.getElementById('task-form');
+const taskInput = document.getElementById('task-input');
+const tasksList = document.getElementById('tasks');
+const darkModeToggle = document.getElementById('dark-mode-toggle');
 
-const THEME_KEY = "todo-theme";
-const LIGHT_THEME = "light";
-const DARK_THEME = "dark";
-const REMOVE_ANIMATION_MS = 250;
+// Load tasks from localStorage
+let tasks = JSON.parse(localStorage.getItem('tasks')) || [];
 
-let nextId = 0;
-let todos = [];
+// Current filter state: 'all', 'pending', 'completed'
+let currentFilter = 'all';
 
-function getPreferredTheme() {
-  const storedTheme = localStorage.getItem(THEME_KEY);
-  if (storedTheme === LIGHT_THEME || storedTheme === DARK_THEME) {
-    return storedTheme;
-  }
+// Dark mode state
+let isDarkMode = localStorage.getItem('darkMode') === 'true';
 
-  const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
-  return prefersDark ? DARK_THEME : LIGHT_THEME;
-}
+// Render tasks
+function renderTasks() {
+    tasksList.innerHTML = '';
+    tasks.forEach((task, index) => {
+        if (currentFilter === 'pending' && task.completed) return;
+        if (currentFilter === 'completed' && !task.completed) return;
 
-function applyTheme(theme) {
-  const nextTheme = theme === DARK_THEME ? DARK_THEME : LIGHT_THEME;
-  const isDark = nextTheme === DARK_THEME;
+        const li = document.createElement('li');
+        li.className = `task-item ${task.completed ? 'completed' : ''}`;
 
-  root.setAttribute("data-theme", nextTheme);
-  themeIcon.textContent = isDark ? "☀️" : "🌙";
-  themeLabel.textContent = isDark ? "Light" : "Dark";
-  themeToggle.setAttribute("aria-label", isDark ? "Switch to light theme" : "Switch to dark theme");
-  themeToggle.setAttribute("aria-pressed", String(isDark));
-}
+        li.innerHTML = `
+            <input type="checkbox" class="task-checkbox" ${task.completed ? 'checked' : ''} data-index="${index}" aria-label="Mark task as ${task.completed ? 'incomplete' : 'complete'}">
+            <span class="task-text">${task.text}</span>
+            <div class="task-actions">
+                <button class="btn-delete" data-index="${index}" aria-label="Delete task">Delete</button>
+            </div>
+        `;
 
-function updateStats() {
-  const total = todos.length;
-  if (total === 0) {
-    stats.hidden = true;
-    return;
-  }
-
-  const completed = todos.filter(t => t.completed).length;
-  const remaining = total - completed;
-  stats.hidden = false;
-
-  if (completed === 0) {
-    stats.textContent = `${total} task${total !== 1 ? "s" : ""}`;
-  } else if (remaining === 0) {
-    stats.textContent = `All ${total} done 🎉`;
-  } else {
-    stats.textContent = `${remaining} remaining · ${completed} completed`;
-  }
-}
-
-function renderTodos() {
-  list.innerHTML = "";
-
-  if (todos.length === 0) {
-    const empty = document.createElement("li");
-    empty.className = "empty-state";
-    empty.innerHTML = `
-      <span class="empty-state-icon" aria-hidden="true">📋</span>
-      <p class="empty-state-text">No todos yet</p>
-      <p class="empty-state-sub">Add one above to get started!</p>
-    `;
-    list.appendChild(empty);
-    updateStats();
-    return;
-  }
-
-  todos.forEach((todo) => {
-    const item = document.createElement("li");
-    item.className = `todo-item${todo.completed ? " completed" : ""}`;
-
-    const checkbox = document.createElement("input");
-    checkbox.type = "checkbox";
-    checkbox.className = "todo-checkbox";
-    checkbox.checked = todo.completed;
-    checkbox.setAttribute("aria-label", `Mark "${todo.text}" as ${todo.completed ? "incomplete" : "complete"}`);
-    checkbox.addEventListener("change", () => {
-      const target = todos.find(t => t.id === todo.id);
-      if (target) {
-        target.completed = checkbox.checked;
-        item.classList.toggle("completed", checkbox.checked);
-        updateStats();
-      }
+        tasksList.appendChild(li);
     });
-
-    const text = document.createElement("span");
-    text.className = "todo-text";
-    text.textContent = todo.text;
-
-    const delButton = document.createElement("button");
-    delButton.className = "delete-btn";
-    delButton.type = "button";
-    delButton.textContent = "✕";
-    delButton.setAttribute("aria-label", `Delete "${todo.text}"`);
-    delButton.addEventListener("click", () => {
-      item.classList.add("removing");
-      setTimeout(() => {
-        todos = todos.filter(t => t.id !== todo.id);
-        renderTodos();
-      }, REMOVE_ANIMATION_MS);
-    });
-
-    item.appendChild(checkbox);
-    item.appendChild(text);
-    item.appendChild(delButton);
-    list.appendChild(item);
-  });
-
-  updateStats();
 }
 
-form.addEventListener("submit", (event) => {
-  event.preventDefault();
+// Add task
+function addTask(text) {
+    const task = {
+        text: text,
+        completed: false,
+        id: Date.now()
+    };
+    tasks.push(task);
+    saveTasks();
+    renderTasks();
+    taskInput.value = '';
+    taskInput.focus();
+}
 
-  const value = input.value.trim();
-  if (!value) {
-    return;
-  }
+// Delete task
+function deleteTask(index) {
+    tasks.splice(index, 1);
+    saveTasks();
+    renderTasks();
+}
 
-  todos.push({ id: nextId++, text: value, completed: false });
-  input.value = "";
-  input.focus();
-  renderTodos();
+// Toggle task completion
+function toggleTask(index) {
+    tasks[index].completed = !tasks[index].completed;
+    saveTasks();
+    renderTasks();
+}
+
+// Save tasks to localStorage
+function saveTasks() {
+    localStorage.setItem('tasks', JSON.stringify(tasks));
+}
+
+// Event listeners
+const filterAllBtn = document.getElementById('filter-all');
+const filterPendingBtn = document.getElementById('filter-pending');
+const filterCompletedBtn = document.getElementById('filter-completed');
+
+filterAllBtn.addEventListener('click', () => setFilter('all'));
+filterPendingBtn.addEventListener('click', () => setFilter('pending'));
+filterCompletedBtn.addEventListener('click', () => setFilter('completed'));
+
+darkModeToggle.addEventListener('click', toggleDarkMode);
+
+taskForm.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const text = taskInput.value.trim();
+    if (text.length === 0) {
+        taskInput.value = '';
+        taskInput.focus();
+        return;
+    }
+    addTask(text);
 });
 
-themeToggle.addEventListener("click", () => {
-  const currentTheme = root.getAttribute("data-theme") === DARK_THEME ? DARK_THEME : LIGHT_THEME;
-  const nextTheme = currentTheme === DARK_THEME ? LIGHT_THEME : DARK_THEME;
-  applyTheme(nextTheme);
-  localStorage.setItem(THEME_KEY, nextTheme);
+tasksList.addEventListener('click', (e) => {
+    if (e.target.classList.contains('btn-delete')) {
+        const index = parseInt(e.target.dataset.index);
+        deleteTask(index);
+    } else if (e.target.classList.contains('task-checkbox')) {
+        const index = parseInt(e.target.dataset.index);
+        toggleTask(index);
+    }
 });
 
-applyTheme(getPreferredTheme());
-renderTodos();
+// Keyboard navigation
+tasksList.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        if (e.target.classList.contains('btn-delete')) {
+            const index = parseInt(e.target.dataset.index);
+            deleteTask(index);
+        } else if (e.target.classList.contains('task-checkbox')) {
+            const index = parseInt(e.target.dataset.index);
+            toggleTask(index);
+        }
+    }
+});
+
+// Filter handling
+function setFilter(filter) {
+    currentFilter = filter;
+    // update active button
+    document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
+    if (filter === 'all') filterAllBtn.classList.add('active');
+    if (filter === 'pending') filterPendingBtn.classList.add('active');
+    if (filter === 'completed') filterCompletedBtn.classList.add('active');
+    renderTasks();
+}
+
+// Dark mode functions
+function toggleDarkMode() {
+    isDarkMode = !isDarkMode;
+    document.body.classList.toggle('dark-mode', isDarkMode);
+    localStorage.setItem('darkMode', isDarkMode);
+    updateToggleIcon();
+}
+
+function updateToggleIcon() {
+    const icon = darkModeToggle.querySelector('.toggle-icon');
+    icon.textContent = isDarkMode ? '☀️' : '🌙';
+}
+
+// Initialize
+document.body.classList.toggle('dark-mode', isDarkMode);
+updateToggleIcon();
+renderTasks();
