@@ -1,0 +1,33 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  validate-static-site:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Check required files exist
+        run: |
+          test -f index.html
+          test -f script.js
+          test -f styles.css
+
+      - name: Validate JavaScript syntax
+        run: node --check script.js
+
+      - name: Validate HTML references expected assets
+        run: |
+          node -e "const fs=require('fs'); const html=fs.readFileSync('index.html','utf8'); if(!html.includes('script.js')) throw new Error('index.html does not reference script.js'); if(!html.includes('styles.css')) throw new Error('index.html does not reference styles.css');"
